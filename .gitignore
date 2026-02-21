@@ -1,0 +1,92 @@
+# Build outputs
+bin/
+obj/
+target/
+dist/
+build/
+out/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.vs/
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+.bundle/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.local.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package locks (optional - uncomment if you want to ignore)
+# package-lock.json
+# yarn.lock
+# composer.lock
+# Gemfile.lock
+
+# C# specific
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+packages/
+*.nupkg
+
+# Java specific
+*.class
+*.jar
+*.war
+.gradle/
+
+# Python specific
+*.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+venv/
+env/
+
+# Ruby specific
+*.gem
+.ruby-version
+.ruby-gemset
+
+# Delphi specific
+*.dcu
+*.exe
+*.dll
+*.bpl
+*.dcp
+*.dsk
+*.local
+__history/
+__recovery/
+*.identcache
+*.projdata
+*.tvsconfig
+*.dproj.local
+*.groupproj.local
+
+# Test outputs
+coverage/
+.nyc_output/
+htmlcov/
