@@ -3,7 +3,7 @@ import { EtsClient, EntegreId, InvoiceModel } from './ets-client';
 async function main(): Promise<void> {
   console.log('=== Entegre ETS API Ornegi (TypeScript) ===\n');
 
-  const client = new EtsClient('https://ets-test.entegre.net');
+  const client = new EtsClient('https://ets-test.bulutix.com');
 
   try {
     // 1. Kimlik dogrulama
@@ -36,60 +36,110 @@ async function main(): Promise<void> {
 
     // 4. Fatura olustur ve gonder
     console.log('4. Fatura gonderiliyor...');
+
+    // Fatura kalemleri
+    const lines = [
+      {
+        ItemCode: 'YZL-001',
+        ItemName: 'ERP Yazilim Lisansi (Yillik)',
+        InvoicedQuantity: 1,
+        IsoUnitCode: 'ADET',
+        Price: 50000,
+        LineExtensionAmount: 50000,
+        Taxes: [{ TaxCode: '0015', TaxName: 'KDV', Percent: 20, TaxAmount: 10000 }],
+      },
+      {
+        ItemCode: 'DST-001',
+        ItemName: 'Teknik Destek Hizmeti (12 Ay)',
+        InvoicedQuantity: 12,
+        IsoUnitCode: 'ADET',
+        Price: 2500,
+        LineExtensionAmount: 30000,
+        Taxes: [{ TaxCode: '0015', TaxName: 'KDV', Percent: 20, TaxAmount: 6000 }],
+      },
+      {
+        ItemCode: 'EGT-001',
+        ItemName: 'Kullanici Egitimi (Kisi/Gun)',
+        InvoicedQuantity: 5,
+        IsoUnitCode: 'ADET',
+        Price: 3000,
+        LineExtensionAmount: 15000,
+        Taxes: [{ TaxCode: '0015', TaxName: 'KDV', Percent: 20, TaxAmount: 3000 }],
+      },
+    ];
+
+    // Toplamlar
+    const lineTotal = lines.reduce((sum, l) => sum + l.LineExtensionAmount, 0);
+    const taxTotal = lines.reduce((sum, l) => sum + l.Taxes[0].TaxAmount, 0);
+    const grandTotal = lineTotal + taxTotal;
+
     const invoice: InvoiceModel = {
       Invoice: {
         InvoiceTypeCode: 'SATIS',
         ProfileId: 'TEMELFATURA',
         IssueDate: new Date().toISOString().split('T')[0],
         DocumentCurrencyCode: 'TRY',
-        Notes: ['Bu bir test faturasidir.'],
+        Notes: [
+          'Bu fatura elektronik olarak olusturulmustur.',
+          'Odeme vadesi: 30 gun',
+          'IBAN: TR00 0000 0000 0000 0000 0000 00',
+        ],
         Supplier: {
           PartyIdentification: '1234567890',
-          PartyName: 'Test Satici Ltd. Sti.',
-          TaxOffice: 'Test VD',
+          PartyName: 'Ornek Teknoloji A.S.',
+          TaxOffice: 'Kadikoy VD',
           Address: {
+            Country: 'Turkiye',
             CityName: 'Istanbul',
             CitySubdivisionName: 'Kadikoy',
-            StreetName: 'Test Sokak No:1',
+            StreetName: 'Bagdat Caddesi No:123',
+            BuildingNumber: '123',
+            PostalZone: '34710',
           },
         },
         Customer: {
           PartyIdentification: '9876543210',
-          PartyName: 'Test Alici A.S.',
-          TaxOffice: 'Test VD',
+          PartyName: 'ABC Yazilim Ltd. Sti.',
+          TaxOffice: 'Cankaya VD',
           Address: {
+            Country: 'Turkiye',
             CityName: 'Ankara',
             CitySubdivisionName: 'Cankaya',
-            StreetName: 'Ornek Caddesi No:5',
+            StreetName: 'Ataturk Bulvari No:456',
+            BuildingNumber: '456',
+            PostalZone: '06690',
           },
         },
-        Lines: [
-          {
-            ItemCode: 'URUN001',
-            ItemName: 'Test Urun',
-            InvoicedQuantity: 10,
-            IsoUnitCode: 'ADET',
-            Price: 100,
-            LineExtensionAmount: 1000,
-            Taxes: [{ TaxCode: '0015', TaxName: 'KDV', Percent: 20, TaxAmount: 200 }],
-          },
-        ],
-        LineExtensionAmount: 1000,
-        TaxExclusiveAmount: 1000,
-        TaxInclusiveAmount: 1200,
-        PayableAmount: 1200,
+        Lines: lines,
+        LineExtensionAmount: lineTotal,
+        TaxExclusiveAmount: lineTotal,
+        TaxInclusiveAmount: grandTotal,
+        PayableAmount: grandTotal,
         TaxTotal: {
-          TaxAmount: 200,
+          TaxAmount: taxTotal,
           TaxSubtotals: [
-            { TaxCode: '0015', TaxName: 'KDV', TaxableAmount: 1000, TaxAmount: 200, Percent: 20 },
+            {
+              TaxCode: '0015',
+              TaxName: 'KDV',
+              TaxableAmount: lineTotal,
+              TaxAmount: taxTotal,
+              Percent: 20,
+            },
           ],
         },
       },
       TargetCustomer: { Alias: 'urn:mail:defaultpk@9876543210' },
     };
 
+    // Fatura ozeti
+    console.log('   Fatura Detaylari:');
+    console.log(`   - Kalem Sayisi: ${lines.length}`);
+    console.log(`   - Ara Toplam: ${lineTotal.toLocaleString('tr-TR')} TRY`);
+    console.log(`   - KDV (%20): ${taxTotal.toLocaleString('tr-TR')} TRY`);
+    console.log(`   - Genel Toplam: ${grandTotal.toLocaleString('tr-TR')} TRY`);
+
     const result = await client.sendInvoice(invoice);
-    console.log(`   Fatura gonderildi!`);
+    console.log(`\n   Fatura gonderildi!`);
     console.log(`   UUID: ${result.Uuid}`);
     console.log(`   Numara: ${result.Number}\n`);
 

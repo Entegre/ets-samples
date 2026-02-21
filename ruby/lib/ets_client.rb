@@ -158,41 +158,108 @@ if __FILE__ == $PROGRAM_NAME
 
     # 4. Fatura olustur ve gonder
     puts '4. Fatura gonderiliyor...'
+
+    # Fatura kalemleri
+    lines = [
+      {
+        'ItemCode' => 'YZL-001',
+        'ItemName' => 'ERP Yazilim Lisansi (Yillik)',
+        'InvoicedQuantity' => 1,
+        'IsoUnitCode' => 'ADET',
+        'Price' => 50_000,
+        'LineExtensionAmount' => 50_000,
+        'Taxes' => [{ 'TaxCode' => '0015', 'TaxName' => 'KDV', 'Percent' => 20, 'TaxAmount' => 10_000 }]
+      },
+      {
+        'ItemCode' => 'DST-001',
+        'ItemName' => 'Teknik Destek Hizmeti (12 Ay)',
+        'InvoicedQuantity' => 12,
+        'IsoUnitCode' => 'ADET',
+        'Price' => 2_500,
+        'LineExtensionAmount' => 30_000,
+        'Taxes' => [{ 'TaxCode' => '0015', 'TaxName' => 'KDV', 'Percent' => 20, 'TaxAmount' => 6_000 }]
+      },
+      {
+        'ItemCode' => 'EGT-001',
+        'ItemName' => 'Kullanici Egitimi (Kisi/Gun)',
+        'InvoicedQuantity' => 5,
+        'IsoUnitCode' => 'ADET',
+        'Price' => 3_000,
+        'LineExtensionAmount' => 15_000,
+        'Taxes' => [{ 'TaxCode' => '0015', 'TaxName' => 'KDV', 'Percent' => 20, 'TaxAmount' => 3_000 }]
+      }
+    ]
+
+    # Toplamlar
+    line_total = lines.sum { |l| l['LineExtensionAmount'] }
+    tax_total = lines.sum { |l| l['Taxes'][0]['TaxAmount'] }
+    grand_total = line_total + tax_total
+
     invoice = {
       'Invoice' => {
         'InvoiceTypeCode' => 'SATIS',
         'ProfileId' => 'TEMELFATURA',
         'IssueDate' => Date.today.to_s,
         'DocumentCurrencyCode' => 'TRY',
-        'Notes' => ['Bu bir test faturasidir.'],
+        'Notes' => [
+          'Bu fatura elektronik olarak olusturulmustur.',
+          'Odeme vadesi: 30 gun',
+          'IBAN: TR00 0000 0000 0000 0000 0000 00'
+        ],
         'Supplier' => {
           'PartyIdentification' => '1234567890',
-          'PartyName' => 'Test Satici Ltd. Sti.',
-          'TaxOffice' => 'Test VD'
+          'PartyName' => 'Ornek Teknoloji A.S.',
+          'TaxOffice' => 'Kadikoy VD',
+          'Address' => {
+            'Country' => 'Turkiye',
+            'CityName' => 'Istanbul',
+            'CitySubdivisionName' => 'Kadikoy',
+            'StreetName' => 'Bagdat Caddesi No:123',
+            'BuildingNumber' => '123',
+            'PostalZone' => '34710'
+          }
         },
         'Customer' => {
           'PartyIdentification' => '9876543210',
-          'PartyName' => 'Test Alici A.S.',
-          'TaxOffice' => 'Test VD'
+          'PartyName' => 'ABC Yazilim Ltd. Sti.',
+          'TaxOffice' => 'Cankaya VD',
+          'Address' => {
+            'Country' => 'Turkiye',
+            'CityName' => 'Ankara',
+            'CitySubdivisionName' => 'Cankaya',
+            'StreetName' => 'Ataturk Bulvari No:456',
+            'BuildingNumber' => '456',
+            'PostalZone' => '06690'
+          }
         },
-        'Lines' => [{
-          'ItemCode' => 'URUN001',
-          'ItemName' => 'Test Urun',
-          'InvoicedQuantity' => 10,
-          'IsoUnitCode' => 'ADET',
-          'Price' => 100,
-          'LineExtensionAmount' => 1000,
-          'Taxes' => [{ 'TaxCode' => '0015', 'TaxName' => 'KDV', 'Percent' => 20, 'TaxAmount' => 200 }]
-        }],
-        'LineExtensionAmount' => 1000,
-        'TaxExclusiveAmount' => 1000,
-        'TaxInclusiveAmount' => 1200,
-        'PayableAmount' => 1200
+        'Lines' => lines,
+        'LineExtensionAmount' => line_total,
+        'TaxExclusiveAmount' => line_total,
+        'TaxInclusiveAmount' => grand_total,
+        'PayableAmount' => grand_total,
+        'TaxTotal' => {
+          'TaxAmount' => tax_total,
+          'TaxSubtotals' => [{
+            'TaxCode' => '0015',
+            'TaxName' => 'KDV',
+            'TaxableAmount' => line_total,
+            'TaxAmount' => tax_total,
+            'Percent' => 20
+          }]
+        }
       },
       'TargetCustomer' => { 'Alias' => 'urn:mail:defaultpk@9876543210' }
     }
 
+    # Fatura ozeti
+    puts '   Fatura Detaylari:'
+    puts "   - Kalem Sayisi: #{lines.length}"
+    puts "   - Ara Toplam: #{format('%<amount>.2f', amount: line_total).gsub('.', ',')} TRY"
+    puts "   - KDV (%20): #{format('%<amount>.2f', amount: tax_total).gsub('.', ',')} TRY"
+    puts "   - Genel Toplam: #{format('%<amount>.2f', amount: grand_total).gsub('.', ',')} TRY"
+
     result = client.send_invoice(invoice)
+    puts
     puts '   Fatura gonderildi!'
     puts "   UUID: #{result['Uuid']}"
     puts "   Numara: #{result['Number']}"

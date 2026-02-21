@@ -202,7 +202,7 @@ var
   Token, Vkn, Uuid: string;
   IsActive: Boolean;
   Aliases: TJSONArray;
-  Invoice, InvoiceData, Supplier, Customer, Line, Taxes, Tax, TargetCustomer, ResultObj, StatusObj, RateObj: TJSONObject;
+  Invoice, InvoiceData, Supplier, Customer, TargetCustomer, ResultObj, StatusObj, RateObj: TJSONObject;
   Lines: TJSONArray;
   I: Integer;
 begin
@@ -251,40 +251,125 @@ begin
       // 4. Fatura olustur ve gonder
       WriteLn('4. Fatura gonderiliyor...');
 
+      // Supplier Address
+      var SupplierAddress := TJSONObject.Create;
+      SupplierAddress.AddPair('Country', 'Turkiye');
+      SupplierAddress.AddPair('CityName', 'Istanbul');
+      SupplierAddress.AddPair('CitySubdivisionName', 'Kadikoy');
+      SupplierAddress.AddPair('StreetName', 'Bagdat Caddesi No:123');
+      SupplierAddress.AddPair('BuildingNumber', '123');
+      SupplierAddress.AddPair('PostalZone', '34710');
+
       // Supplier
       Supplier := TJSONObject.Create;
       Supplier.AddPair('PartyIdentification', '1234567890');
-      Supplier.AddPair('PartyName', 'Test Satici Ltd. Sti.');
-      Supplier.AddPair('TaxOffice', 'Test VD');
+      Supplier.AddPair('PartyName', 'Ornek Teknoloji A.S.');
+      Supplier.AddPair('TaxOffice', 'Kadikoy VD');
+      Supplier.AddPair('Address', SupplierAddress);
+
+      // Customer Address
+      var CustomerAddress := TJSONObject.Create;
+      CustomerAddress.AddPair('Country', 'Turkiye');
+      CustomerAddress.AddPair('CityName', 'Ankara');
+      CustomerAddress.AddPair('CitySubdivisionName', 'Cankaya');
+      CustomerAddress.AddPair('StreetName', 'Ataturk Bulvari No:456');
+      CustomerAddress.AddPair('BuildingNumber', '456');
+      CustomerAddress.AddPair('PostalZone', '06690');
 
       // Customer
       Customer := TJSONObject.Create;
       Customer.AddPair('PartyIdentification', '9876543210');
-      Customer.AddPair('PartyName', 'Test Alici A.S.');
-      Customer.AddPair('TaxOffice', 'Test VD');
-
-      // Tax
-      Tax := TJSONObject.Create;
-      Tax.AddPair('TaxCode', '0015');
-      Tax.AddPair('TaxName', 'KDV');
-      Tax.AddPair('Percent', TJSONNumber.Create(20));
-      Tax.AddPair('TaxAmount', TJSONNumber.Create(200));
-
-      Taxes := TJSONArray.Create;
-      Taxes.Add(Tax);
-
-      // Line
-      Line := TJSONObject.Create;
-      Line.AddPair('ItemCode', 'URUN001');
-      Line.AddPair('ItemName', 'Test Urun');
-      Line.AddPair('InvoicedQuantity', TJSONNumber.Create(10));
-      Line.AddPair('IsoUnitCode', 'ADET');
-      Line.AddPair('Price', TJSONNumber.Create(100));
-      Line.AddPair('LineExtensionAmount', TJSONNumber.Create(1000));
-      Line.AddPair('Taxes', Taxes);
+      Customer.AddPair('PartyName', 'ABC Yazilim Ltd. Sti.');
+      Customer.AddPair('TaxOffice', 'Cankaya VD');
+      Customer.AddPair('Address', CustomerAddress);
 
       Lines := TJSONArray.Create;
-      Lines.Add(Line);
+
+      // Kalem 1: Yazilim Lisansi
+      var Tax1 := TJSONObject.Create;
+      Tax1.AddPair('TaxCode', '0015');
+      Tax1.AddPair('TaxName', 'KDV');
+      Tax1.AddPair('Percent', TJSONNumber.Create(20));
+      Tax1.AddPair('TaxAmount', TJSONNumber.Create(10000));
+
+      var Taxes1 := TJSONArray.Create;
+      Taxes1.Add(Tax1);
+
+      var Line1 := TJSONObject.Create;
+      Line1.AddPair('ItemCode', 'YZL-001');
+      Line1.AddPair('ItemName', 'ERP Yazilim Lisansi (Yillik)');
+      Line1.AddPair('InvoicedQuantity', TJSONNumber.Create(1));
+      Line1.AddPair('IsoUnitCode', 'ADET');
+      Line1.AddPair('Price', TJSONNumber.Create(50000));
+      Line1.AddPair('LineExtensionAmount', TJSONNumber.Create(50000));
+      Line1.AddPair('Taxes', Taxes1);
+      Lines.Add(Line1);
+
+      // Kalem 2: Teknik Destek
+      var Tax2 := TJSONObject.Create;
+      Tax2.AddPair('TaxCode', '0015');
+      Tax2.AddPair('TaxName', 'KDV');
+      Tax2.AddPair('Percent', TJSONNumber.Create(20));
+      Tax2.AddPair('TaxAmount', TJSONNumber.Create(6000));
+
+      var Taxes2 := TJSONArray.Create;
+      Taxes2.Add(Tax2);
+
+      var Line2 := TJSONObject.Create;
+      Line2.AddPair('ItemCode', 'DST-001');
+      Line2.AddPair('ItemName', 'Teknik Destek Hizmeti (12 Ay)');
+      Line2.AddPair('InvoicedQuantity', TJSONNumber.Create(12));
+      Line2.AddPair('IsoUnitCode', 'ADET');
+      Line2.AddPair('Price', TJSONNumber.Create(2500));
+      Line2.AddPair('LineExtensionAmount', TJSONNumber.Create(30000));
+      Line2.AddPair('Taxes', Taxes2);
+      Lines.Add(Line2);
+
+      // Kalem 3: Egitim
+      var Tax3 := TJSONObject.Create;
+      Tax3.AddPair('TaxCode', '0015');
+      Tax3.AddPair('TaxName', 'KDV');
+      Tax3.AddPair('Percent', TJSONNumber.Create(20));
+      Tax3.AddPair('TaxAmount', TJSONNumber.Create(3000));
+
+      var Taxes3 := TJSONArray.Create;
+      Taxes3.Add(Tax3);
+
+      var Line3 := TJSONObject.Create;
+      Line3.AddPair('ItemCode', 'EGT-001');
+      Line3.AddPair('ItemName', 'Kullanici Egitimi (Kisi/Gun)');
+      Line3.AddPair('InvoicedQuantity', TJSONNumber.Create(5));
+      Line3.AddPair('IsoUnitCode', 'ADET');
+      Line3.AddPair('Price', TJSONNumber.Create(3000));
+      Line3.AddPair('LineExtensionAmount', TJSONNumber.Create(15000));
+      Line3.AddPair('Taxes', Taxes3);
+      Lines.Add(Line3);
+
+      // Toplamlar
+      var LineTotal: Integer := 95000;  // 50000 + 30000 + 15000
+      var TaxTotal: Integer := 19000;   // 10000 + 6000 + 3000
+      var GrandTotal: Integer := LineTotal + TaxTotal;
+
+      // Notes
+      var Notes := TJSONArray.Create;
+      Notes.Add('Bu fatura elektronik olarak olusturulmustur.');
+      Notes.Add('Odeme vadesi: 30 gun');
+      Notes.Add('IBAN: TR00 0000 0000 0000 0000 0000 00');
+
+      // Tax Subtotal
+      var TaxSubtotal := TJSONObject.Create;
+      TaxSubtotal.AddPair('TaxCode', '0015');
+      TaxSubtotal.AddPair('TaxName', 'KDV');
+      TaxSubtotal.AddPair('TaxableAmount', TJSONNumber.Create(LineTotal));
+      TaxSubtotal.AddPair('TaxAmount', TJSONNumber.Create(TaxTotal));
+      TaxSubtotal.AddPair('Percent', TJSONNumber.Create(20));
+
+      var TaxSubtotals := TJSONArray.Create;
+      TaxSubtotals.Add(TaxSubtotal);
+
+      var TaxTotalObj := TJSONObject.Create;
+      TaxTotalObj.AddPair('TaxAmount', TJSONNumber.Create(TaxTotal));
+      TaxTotalObj.AddPair('TaxSubtotals', TaxSubtotals);
 
       // Invoice data
       InvoiceData := TJSONObject.Create;
@@ -292,13 +377,15 @@ begin
       InvoiceData.AddPair('ProfileId', 'TEMELFATURA');
       InvoiceData.AddPair('IssueDate', FormatDateTime('yyyy-mm-dd', Now));
       InvoiceData.AddPair('DocumentCurrencyCode', 'TRY');
+      InvoiceData.AddPair('Notes', Notes);
       InvoiceData.AddPair('Supplier', Supplier);
       InvoiceData.AddPair('Customer', Customer);
       InvoiceData.AddPair('Lines', Lines);
-      InvoiceData.AddPair('LineExtensionAmount', TJSONNumber.Create(1000));
-      InvoiceData.AddPair('TaxExclusiveAmount', TJSONNumber.Create(1000));
-      InvoiceData.AddPair('TaxInclusiveAmount', TJSONNumber.Create(1200));
-      InvoiceData.AddPair('PayableAmount', TJSONNumber.Create(1200));
+      InvoiceData.AddPair('LineExtensionAmount', TJSONNumber.Create(LineTotal));
+      InvoiceData.AddPair('TaxExclusiveAmount', TJSONNumber.Create(LineTotal));
+      InvoiceData.AddPair('TaxInclusiveAmount', TJSONNumber.Create(GrandTotal));
+      InvoiceData.AddPair('PayableAmount', TJSONNumber.Create(GrandTotal));
+      InvoiceData.AddPair('TaxTotal', TaxTotalObj);
 
       // Target customer
       TargetCustomer := TJSONObject.Create;
@@ -309,9 +396,17 @@ begin
       Invoice.AddPair('Invoice', InvoiceData);
       Invoice.AddPair('TargetCustomer', TargetCustomer);
 
+      // Fatura ozeti
+      WriteLn('   Fatura Detaylari:');
+      WriteLn(Format('   - Kalem Sayisi: %d', [Lines.Count]));
+      WriteLn(Format('   - Ara Toplam: %n TRY', [LineTotal * 1.0]));
+      WriteLn(Format('   - KDV (%%20): %n TRY', [TaxTotal * 1.0]));
+      WriteLn(Format('   - Genel Toplam: %n TRY', [GrandTotal * 1.0]));
+
       try
         ResultObj := Client.SendInvoice(Invoice);
         try
+          WriteLn;
           WriteLn('   Fatura gonderildi!');
           Uuid := ResultObj.GetValue<string>('Uuid', '');
           WriteLn('   UUID: ' + Uuid);

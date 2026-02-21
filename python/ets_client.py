@@ -446,36 +446,74 @@ def main():
             IssueDate=date.today().isoformat(),
             Supplier=Party(
                 PartyIdentification="1234567890",
-                PartyName="Test Satici Ltd. Sti.",
-                TaxOffice="Test VD",
+                PartyName="Ornek Teknoloji A.S.",
+                TaxOffice="Kadikoy VD",
                 Address=Address(
+                    Country="Turkiye",
                     CityName="Istanbul",
                     CitySubdivisionName="Kadikoy",
-                    StreetName="Test Sokak No:1"
+                    StreetName="Bagdat Caddesi No:123",
+                    BuildingNumber="123",
+                    PostalZone="34710"
                 )
             ),
             Customer=Party(
                 PartyIdentification="9876543210",
-                PartyName="Test Alici A.S.",
-                TaxOffice="Test VD",
+                PartyName="ABC Yazilim Ltd. Sti.",
+                TaxOffice="Cankaya VD",
                 Address=Address(
+                    Country="Turkiye",
                     CityName="Ankara",
                     CitySubdivisionName="Cankaya",
-                    StreetName="Ornek Caddesi No:5"
+                    StreetName="Ataturk Bulvari No:456",
+                    BuildingNumber="456",
+                    PostalZone="06690"
                 )
             ),
             Lines=[
+                # Kalem 1: Yazilim Lisansi
                 DocumentLine(
-                    ItemCode="URUN001",
-                    ItemName="Test Urun",
-                    InvoicedQuantity=10,
+                    ItemCode="YZL-001",
+                    ItemName="ERP Yazilim Lisansi (Yillik)",
+                    InvoicedQuantity=1,
                     UnitCode="ADET",
-                    Price=100.00,
+                    Price=50000.00,
+                    TaxPercent=20.0
+                ),
+                # Kalem 2: Teknik Destek
+                DocumentLine(
+                    ItemCode="DST-001",
+                    ItemName="Teknik Destek Hizmeti (12 Ay)",
+                    InvoicedQuantity=12,
+                    UnitCode="ADET",
+                    Price=2500.00,
+                    TaxPercent=20.0
+                ),
+                # Kalem 3: Egitim
+                DocumentLine(
+                    ItemCode="EGT-001",
+                    ItemName="Kullanici Egitimi (Kisi/Gun)",
+                    InvoicedQuantity=5,
+                    UnitCode="ADET",
+                    Price=3000.00,
                     TaxPercent=20.0
                 )
             ],
-            Notes=["Bu bir test faturasidir."]
+            Notes=[
+                "Bu fatura elektronik olarak olusturulmustur.",
+                "Odeme vadesi: 30 gun",
+                "IBAN: TR00 0000 0000 0000 0000 0000 00"
+            ]
         )
+
+        # Fatura ozeti
+        line_total = sum(l.InvoicedQuantity * l.Price for l in invoice.Lines)
+        tax_total = line_total * 0.20
+        print(f"   Fatura Detaylari:")
+        print(f"   - Kalem Sayisi: {len(invoice.Lines)}")
+        print(f"   - Ara Toplam: {line_total:,.2f} TRY")
+        print(f"   - KDV (%20): {tax_total:,.2f} TRY")
+        print(f"   - Genel Toplam: {line_total + tax_total:,.2f} TRY")
 
         result = client.send_invoice(invoice)
         invoice_uuid = result.get('Uuid')

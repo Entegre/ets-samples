@@ -2,7 +2,7 @@ using Entegre.Ets.Samples;
 
 Console.WriteLine("=== Entegre ETS API Ornegi (C#) ===\n");
 
-using var client = new EtsClient("https://ets-test.entegre.net");
+using var client = new EtsClient("https://ets-test.bulutix.com");
 
 try
 {
@@ -36,6 +36,56 @@ try
 
     // 4. Fatura olustur ve gonder
     Console.WriteLine("4. Fatura gonderiliyor...");
+
+    // Fatura kalemleri
+    var lines = new List<DocumentLine>
+    {
+        new()
+        {
+            ItemCode = "YZL-001",
+            ItemName = "ERP Yazilim Lisansi (Yillik)",
+            InvoicedQuantity = 1,
+            IsoUnitCode = "ADET",
+            Price = 50000.00m,
+            LineExtensionAmount = 50000.00m,
+            Taxes = new List<Tax>
+            {
+                new() { TaxCode = "0015", TaxName = "KDV", Percent = 20, TaxAmount = 10000.00m }
+            }
+        },
+        new()
+        {
+            ItemCode = "DST-001",
+            ItemName = "Teknik Destek Hizmeti (12 Ay)",
+            InvoicedQuantity = 12,
+            IsoUnitCode = "ADET",
+            Price = 2500.00m,
+            LineExtensionAmount = 30000.00m,
+            Taxes = new List<Tax>
+            {
+                new() { TaxCode = "0015", TaxName = "KDV", Percent = 20, TaxAmount = 6000.00m }
+            }
+        },
+        new()
+        {
+            ItemCode = "EGT-001",
+            ItemName = "Kullanici Egitimi (Kisi/Gun)",
+            InvoicedQuantity = 5,
+            IsoUnitCode = "ADET",
+            Price = 3000.00m,
+            LineExtensionAmount = 15000.00m,
+            Taxes = new List<Tax>
+            {
+                new() { TaxCode = "0015", TaxName = "KDV", Percent = 20, TaxAmount = 3000.00m }
+            }
+        }
+    };
+
+    // Toplamlar
+    var lineTotal = lines.Sum(l => l.LineExtensionAmount);
+    var taxTotal = lines.Sum(l => l.Taxes!.Sum(t => t.TaxAmount));
+    var grandTotal = lineTotal + taxTotal;
+
     var invoice = new InvoiceModel
     {
         Invoice = new Invoice
@@ -44,57 +94,60 @@ try
             ProfileId = "TEMELFATURA",
             IssueDate = DateTime.Today.ToString("yyyy-MM-dd"),
             DocumentCurrencyCode = "TRY",
-            Notes = new List<string> { "Bu bir test faturasidir." },
+            Notes = new List<string>
+            {
+                "Bu fatura elektronik olarak olusturulmustur.",
+                "Odeme vadesi: 30 gun",
+                "IBAN: TR00 0000 0000 0000 0000 0000 00"
+            },
             Supplier = new Party
             {
                 PartyIdentification = "1234567890",
-                PartyName = "Test Satici Ltd. Sti.",
-                TaxOffice = "Test VD",
+                PartyName = "Ornek Teknoloji A.S.",
+                TaxOffice = "Kadikoy VD",
                 Address = new Address
                 {
+                    Country = "Turkiye",
                     CityName = "Istanbul",
                     CitySubdivisionName = "Kadikoy",
-                    StreetName = "Test Sokak No:1"
+                    StreetName = "Bagdat Caddesi No:123",
+                    BuildingNumber = "123",
+                    PostalZone = "34710"
                 }
             },
             Customer = new Party
             {
                 PartyIdentification = "9876543210",
-                PartyName = "Test Alici A.S.",
-                TaxOffice = "Test VD",
+                PartyName = "ABC Yazilim Ltd. Sti.",
+                TaxOffice = "Cankaya VD",
                 Address = new Address
                 {
+                    Country = "Turkiye",
                     CityName = "Ankara",
                     CitySubdivisionName = "Cankaya",
-                    StreetName = "Ornek Caddesi No:5"
+                    StreetName = "Ataturk Bulvari No:456",
+                    BuildingNumber = "456",
+                    PostalZone = "06690"
                 }
             },
-            Lines = new List<DocumentLine>
-            {
-                new()
-                {
-                    ItemCode = "URUN001",
-                    ItemName = "Test Urun",
-                    InvoicedQuantity = 10,
-                    IsoUnitCode = "ADET",
-                    Price = 100.00m,
-                    LineExtensionAmount = 1000.00m,
-                    Taxes = new List<Tax>
-                    {
-                        new() { TaxCode = "0015", TaxName = "KDV", Percent = 20, TaxAmount = 200.00m }
-                    }
-                }
-            },
-            LineExtensionAmount = 1000.00m,
-            TaxExclusiveAmount = 1000.00m,
-            TaxInclusiveAmount = 1200.00m,
-            PayableAmount = 1200.00m,
+            Lines = lines,
+            LineExtensionAmount = lineTotal,
+            TaxExclusiveAmount = lineTotal,
+            TaxInclusiveAmount = grandTotal,
+            PayableAmount = grandTotal,
             TaxTotal = new TaxTotal
             {
-                TaxAmount = 200.00m,
+                TaxAmount = taxTotal,
                 TaxSubtotals = new List<TaxSubtotal>
                 {
-                    new() { TaxCode = "0015", TaxName = "KDV", TaxableAmount = 1000.00m, TaxAmount = 200.00m, Percent = 20 }
+                    new()
+                    {
+                        TaxCode = "0015",
+                        TaxName = "KDV",
+                        TaxableAmount = lineTotal,
+                        TaxAmount = taxTotal,
+                        Percent = 20
+                    }
                 }
             }
         },
@@ -104,8 +157,15 @@ try
         }
     };
 
+    // Fatura ozeti
+    Console.WriteLine("   Fatura Detaylari:");
+    Console.WriteLine($"   - Kalem Sayisi: {lines.Count}");
+    Console.WriteLine($"   - Ara Toplam: {lineTotal:N2} TRY");
+    Console.WriteLine($"   - KDV (%20): {taxTotal:N2} TRY");
+    Console.WriteLine($"   - Genel Toplam: {grandTotal:N2} TRY");
+
     var result = await client.SendInvoiceAsync(invoice);
-    Console.WriteLine($"   Fatura gonderildi!");
+    Console.WriteLine($"\n   Fatura gonderildi!");
     Console.WriteLine($"   UUID: {result.Uuid}");
     Console.WriteLine($"   Numara: {result.Number}\n");
 
