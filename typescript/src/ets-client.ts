@@ -1,40 +1,54 @@
 /**
  * Entegre ETS API Client - TypeScript
+ * Tum e-belge islemleri icin kullanilabilir.
  */
 
 import axios, { AxiosInstance } from 'axios';
 
 // ==================== TYPES ====================
 
-export interface EntegreId {
-  PartyIdentificationId: string;
-  Username: string;
-  Password: string;
-  SoftwareId: string;
-  Integrator: 'UYM' | 'UYK' | 'IZI' | 'DGN' | 'MYS';
+export type Integrator = 'UYM' | 'UYK' | 'IZI' | 'DGN' | 'MYS';
+
+export interface EtsClientConfig {
+  baseUrl?: string;
+  integrator?: Integrator;
+  softwareId?: string;
 }
 
-export interface ResponseModel<T> {
-  Data?: T;
-  Message?: string;
-  Success: boolean;
+export interface AuthCredentials {
+  partyId: string;
+  username: string;
+  password: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
 }
 
 export interface Address {
   Country?: string;
   CityName?: string;
   CitySubdivisionName?: string;
+  DistrictName?: string;
   StreetName?: string;
   BuildingNumber?: string;
   PostalZone?: string;
 }
 
+export interface Person {
+  FirstName: string;
+  FamilyName: string;
+}
+
 export interface Party {
   PartyIdentification: string;
   PartyName: string;
-  TaxOffice?: string;
+  PartyTaxScheme?: string;
   Alias?: string;
   Address?: Address;
+  Person?: Person;
 }
 
 export interface Tax {
@@ -42,90 +56,188 @@ export interface Tax {
   TaxName: string;
   Percent: number;
   TaxAmount: number;
+  ExemptionReason?: string;
+  ExemptionReasonCode?: string;
 }
 
 export interface DocumentLine {
   ItemCode: string;
   ItemName: string;
+  Description?: string;
   InvoicedQuantity: number;
   IsoUnitCode: string;
+  CurrencyId?: string;
   Price: number;
   LineExtensionAmount?: number;
   Taxes?: Tax[];
 }
 
-export interface TaxSubtotal {
-  TaxCode: string;
-  TaxName: string;
-  TaxableAmount: number;
-  TaxAmount: number;
-  Percent: number;
-}
-
-export interface TaxTotal {
-  TaxAmount: number;
-  TaxSubtotals?: TaxSubtotal[];
+export interface LegalMonetaryTotal {
+  LineExtensionAmount: number;
+  TaxExclusiveAmount?: number;
+  TaxInclusiveAmount?: number;
+  AllowanceTotalAmount?: number;
+  PayableAmount: number;
 }
 
 export interface Invoice {
+  IsDraft?: boolean;
+  InvoiceId?: string;
   InvoiceTypeCode: string;
   ProfileId: string;
   IssueDate: string;
   DocumentCurrencyCode?: string;
+  CurrencyId?: string;
   Notes?: string[];
-  Supplier: Party;
-  Customer: Party;
-  Lines: DocumentLine[];
-  LineExtensionAmount?: number;
-  TaxExclusiveAmount?: number;
-  TaxInclusiveAmount?: number;
-  PayableAmount?: number;
-  TaxTotal?: TaxTotal;
+  SupplierParty: Party;
+  CustomerParty: Party;
+  DocumentLines: DocumentLine[];
+  LegalMonetaryTotal: LegalMonetaryTotal;
+  TaxTotals?: Tax[];
 }
 
-export interface InvoiceModel {
+export interface TargetCustomer {
+  PartyName: string;
+  PartyIdentification: string;
+  Alias?: string;
+}
+
+export interface ArchiveInfo {
+  SendingType: 'ELEKTRONIK' | 'KAGIT';
+  IsInternetSales?: boolean;
+}
+
+export interface InvoiceRequest {
   EtsToken?: string;
   Invoice: Invoice;
-  TargetCustomer?: { Alias: string };
-  ArchiveInfo?: { SendType: string };
+  TargetCustomer?: TargetCustomer;
+  ArchiveInfo?: ArchiveInfo;
 }
 
 export interface InvoiceResult {
-  Uuid?: string;
-  Number?: string;
-  Code?: string;
-  Message?: string;
+  uuid?: string;
+  invoiceNumber?: string;
+  message?: string;
+  code?: string;
 }
 
 export interface InvoiceStatus {
-  Status?: string;
-  StatusCode?: string;
-  StatusDate?: string;
+  uuid?: string;
+  invoiceNumber?: string;
+  status?: string;
+  statusDescription?: string;
+}
+
+export interface UserCheckResult {
+  partyId: string;
+  isActive: boolean;
 }
 
 export interface UserAlias {
-  Alias: string;
-  Type: string;
-  RegisterDate?: string;
+  alias: string;
+  creationTime?: string;
+}
+
+export interface UserAliasResult {
+  partyIdentificationId: string;
+  title?: string;
+  type?: string;
+  registerTime?: string;
+  senderboxAliases: UserAlias[];
+  receiverboxAliases: UserAlias[];
 }
 
 export interface ExchangeRate {
-  Currency?: string;
-  Rate?: number;
-  Date?: string;
+  currency: string;
+  buyingRate?: number;
+  sellingRate?: number;
+  effectiveRate?: number;
+  date?: string;
+}
+
+export interface InvoiceListQuery {
+  startDate: string;
+  endDate: string;
+  pageIndex?: number;
+  pageSize?: number;
+}
+
+export interface InvoiceListItem {
+  uuid?: string;
+  invoiceNumber?: string;
+  issueDate?: string;
+  customerName?: string;
+  customerTaxId?: string;
+  payableAmount?: number;
+  currencyCode?: string;
+  status?: string;
+}
+
+export interface PdfResult {
+  pdfContent?: string; // Base64 encoded
+  fileName?: string;
+}
+
+export interface RespondRequest {
+  responseType: 'KABUL' | 'RED';
+  description?: string;
+}
+
+// ==================== E-IRSALIYE TYPES ====================
+
+export interface Dispatch {
+  DispatchId?: string;
+  ProfileId: string;
+  IssueDate: string;
+  DispatchTypeCode: string;
+  CurrencyId?: string;
+  Notes?: string[];
+  SupplierParty: Party;
+  CustomerParty: Party;
+  DocumentLines: DocumentLine[];
+}
+
+export interface DispatchRequest {
+  EtsToken?: string;
+  Dispatch: Dispatch;
+  TargetCustomer?: TargetCustomer;
+}
+
+// ==================== E-MUSTAHSIL TYPES ====================
+
+export interface ProducerReceipt {
+  ReceiptId?: string;
+  ProfileId: string;
+  IssueDate: string;
+  CurrencyId?: string;
+  Notes?: string[];
+  SupplierParty: Party;
+  CustomerParty: Party;
+  DocumentLines: DocumentLine[];
+  LegalMonetaryTotal: LegalMonetaryTotal;
+}
+
+export interface ProducerReceiptRequest {
+  EtsToken?: string;
+  ProducerReceipt: ProducerReceipt;
 }
 
 // ==================== CLIENT ====================
 
 export class EtsClient {
-  private baseUrl: string;
-  private etsToken: string | null = null;
   private client: AxiosInstance;
+  private etsToken: string | null = null;
+  private config: Required<EtsClientConfig>;
 
-  constructor(baseUrl: string = 'https://ets-test.bulutix.com') {
-    this.baseUrl = baseUrl.replace(/\/$/, '');
+  constructor(config: EtsClientConfig = {}) {
+    this.config = {
+      baseUrl: config.baseUrl || 'https://ets.bulutix.com',
+      integrator: config.integrator || 'UYM',
+      softwareId: config.softwareId || 'ETS-CLIENT',
+    };
+
     this.client = axios.create({
-      baseURL: this.baseUrl,
+      baseURL: this.config.baseUrl,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -133,20 +245,38 @@ export class EtsClient {
     });
   }
 
+  // ==================== AUTH ====================
+
   /**
    * Kimlik dogrulama yapar ve EtsToken alir.
    */
-  async authenticate(entegreId: EntegreId): Promise<string> {
-    const response = await this.client.post<ResponseModel<{ EtsToken: string }>>(
-      '/auth/token',
-      entegreId
-    );
+  async authenticate(credentials: AuthCredentials): Promise<ApiResponse<{ token: string }>> {
+    const response = await this.client.post('/auth/token', {
+      PartyIdentificationId: credentials.partyId,
+      Username: credentials.username,
+      Password: credentials.password,
+      SoftwareId: this.config.softwareId,
+      Integrator: this.config.integrator,
+    });
 
-    if (!response.data.Success) {
-      throw new Error(`Authentication failed: ${response.data.Message}`);
+    if (response.data.success && response.data.data?.token) {
+      this.etsToken = response.data.data.token;
     }
 
-    this.etsToken = response.data.Data!.EtsToken;
+    return response.data;
+  }
+
+  /**
+   * Token'i manuel olarak ayarlar.
+   */
+  setToken(token: string): void {
+    this.etsToken = token;
+  }
+
+  /**
+   * Mevcut token'i dondurur.
+   */
+  getToken(): string | null {
     return this.etsToken;
   }
 
@@ -155,58 +285,60 @@ export class EtsClient {
   /**
    * E-Fatura mukellefi mi sorgular.
    */
-  async checkEInvoiceUser(partyId: string): Promise<boolean> {
-    const result = await this.post<{ IsActive: boolean }>(`/invoice/user/${partyId}`);
-    return result?.IsActive ?? false;
+  async checkEInvoiceUser(partyId: string): Promise<ApiResponse<UserCheckResult>> {
+    return this.post(`/invoice/user/${partyId}`);
   }
 
   /**
    * Kullanici alias listesini getirir.
    */
-  async getUserAliases(partyId: string): Promise<UserAlias[]> {
-    const result = await this.post<{ Aliases: UserAlias[] }>(`/invoice/user/${partyId}/alias`);
-    return result?.Aliases ?? [];
+  async getUserAliases(partyId: string): Promise<ApiResponse<UserAliasResult>> {
+    return this.post(`/invoice/user/${partyId}/alias`);
   }
 
   /**
    * E-Fatura gonderir.
    */
-  async sendInvoice(invoice: InvoiceModel): Promise<InvoiceResult> {
-    invoice.EtsToken = this.etsToken!;
-    const result = await this.post<InvoiceResult>('/invoice', invoice);
-    return result ?? {};
+  async sendInvoice(request: InvoiceRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post('/invoice', request);
   }
 
   /**
    * Taslak fatura gonderir.
    */
-  async sendDraftInvoice(invoice: InvoiceModel): Promise<InvoiceResult> {
-    invoice.EtsToken = this.etsToken!;
-    const result = await this.post<InvoiceResult>('/invoice/draft', invoice);
-    return result ?? {};
+  async sendDraftInvoice(request: InvoiceRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post('/invoice/draft', request);
   }
 
   /**
    * Fatura durumunu sorgular.
    */
-  async getInvoiceStatus(uuid: string): Promise<InvoiceStatus> {
-    const result = await this.get<InvoiceStatus>(`/invoice/${uuid}/status`);
-    return result ?? {};
+  async getInvoiceStatus(uuid: string): Promise<ApiResponse<InvoiceStatus>> {
+    return this.get(`/invoice/${uuid}/status`);
   }
 
   /**
    * Faturaya yanit verir (Kabul/Red).
    */
-  async respondInvoice(
-    uuid: string,
-    responseType: 'KABUL' | 'RED',
-    description: string = ''
-  ): Promise<InvoiceResult> {
-    const result = await this.post<InvoiceResult>(`/invoice/${uuid}/respond`, {
-      ResponseType: responseType,
-      Description: description,
+  async respondInvoice(uuid: string, request: RespondRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post(`/invoice/${uuid}/respond`, {
+      ResponseType: request.responseType,
+      Description: request.description,
     });
-    return result ?? {};
+  }
+
+  /**
+   * Gelen fatura listesini getirir.
+   */
+  async getInboxInvoices(query: InvoiceListQuery): Promise<ApiResponse<InvoiceListItem[]>> {
+    return this.post('/invoice/inbox', query);
+  }
+
+  /**
+   * Fatura PDF'ini indirir.
+   */
+  async getInvoicePdf(uuid: string): Promise<ApiResponse<PdfResult>> {
+    return this.get(`/invoice/${uuid}/pdf`);
   }
 
   // ==================== E-ARSIV ====================
@@ -214,27 +346,43 @@ export class EtsClient {
   /**
    * E-Arsiv fatura gonderir.
    */
-  async sendEArchive(invoice: InvoiceModel, sendType: string = 'KAGIT'): Promise<InvoiceResult> {
-    invoice.EtsToken = this.etsToken!;
-    invoice.ArchiveInfo = { SendType: sendType };
-    const result = await this.post<InvoiceResult>('/earchive', invoice);
-    return result ?? {};
+  async sendEArchiveInvoice(request: InvoiceRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post('/earchive', request);
+  }
+
+  /**
+   * Toplu E-Arsiv fatura gonderir.
+   */
+  async sendEArchiveInvoices(requests: InvoiceRequest[]): Promise<ApiResponse<InvoiceResult[]>> {
+    return this.post('/earchive/batch', { Invoices: requests });
   }
 
   /**
    * E-Arsiv fatura durumunu sorgular.
    */
-  async getEArchiveStatus(uuid: string): Promise<InvoiceStatus> {
-    const result = await this.get<InvoiceStatus>(`/earchive/${uuid}/status`);
-    return result ?? {};
+  async getEArchiveStatus(uuid: string): Promise<ApiResponse<InvoiceStatus>> {
+    return this.get(`/earchive/${uuid}/status`);
   }
 
   /**
    * E-Arsiv faturayi iptal eder.
    */
-  async cancelEArchive(uuid: string): Promise<InvoiceResult> {
-    const result = await this.post<InvoiceResult>(`/earchive/${uuid}/cancel`);
-    return result ?? {};
+  async cancelEArchive(uuid: string, cancelDate?: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.post(`/earchive/${uuid}/cancel`, { CancelDate: cancelDate });
+  }
+
+  /**
+   * E-Arsiv fatura PDF'ini indirir.
+   */
+  async getEArchivePdf(uuid: string): Promise<ApiResponse<PdfResult>> {
+    return this.get(`/earchive/${uuid}/pdf`);
+  }
+
+  /**
+   * E-Arsiv fatura listesini getirir.
+   */
+  async getEArchiveList(query: InvoiceListQuery): Promise<ApiResponse<InvoiceListItem[]>> {
+    return this.post('/earchive/list', query);
   }
 
   // ==================== E-IRSALIYE ====================
@@ -242,48 +390,100 @@ export class EtsClient {
   /**
    * E-Irsaliye mukellefi mi sorgular.
    */
-  async checkEDispatchUser(partyId: string): Promise<boolean> {
-    const result = await this.post<{ IsActive: boolean }>(`/dispatch/user/${partyId}`);
-    return result?.IsActive ?? false;
+  async checkEDispatchUser(partyId: string): Promise<ApiResponse<UserCheckResult>> {
+    return this.post(`/dispatch/user/${partyId}`);
+  }
+
+  /**
+   * E-Irsaliye kullanici alias listesini getirir.
+   */
+  async getDispatchUserAliases(partyId: string): Promise<ApiResponse<UserAliasResult>> {
+    return this.post(`/dispatch/user/${partyId}/alias`);
+  }
+
+  /**
+   * E-Irsaliye gonderir.
+   */
+  async sendDispatch(request: DispatchRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post('/dispatch', request);
+  }
+
+  /**
+   * Taslak E-Irsaliye gonderir.
+   */
+  async sendDraftDispatch(request: DispatchRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post('/dispatch/draft', request);
+  }
+
+  /**
+   * E-Irsaliye durumunu sorgular.
+   */
+  async getDispatchStatus(uuid: string): Promise<ApiResponse<InvoiceStatus>> {
+    return this.get(`/dispatch/${uuid}/status`);
+  }
+
+  // ==================== E-MUSTAHSIL ====================
+
+  /**
+   * E-Mustahsil makbuzu gonderir.
+   */
+  async sendProducerReceipt(request: ProducerReceiptRequest): Promise<ApiResponse<InvoiceResult>> {
+    return this.post('/producer', request);
+  }
+
+  /**
+   * Toplu E-Mustahsil makbuzu gonderir.
+   */
+  async sendProducerReceipts(requests: ProducerReceiptRequest[]): Promise<ApiResponse<InvoiceResult[]>> {
+    return this.post('/producer/batch', { Receipts: requests });
+  }
+
+  /**
+   * E-Mustahsil makbuz durumunu sorgular.
+   */
+  async getProducerReceiptStatus(uuid: string): Promise<ApiResponse<InvoiceStatus>> {
+    return this.get(`/producer/${uuid}/status`);
   }
 
   // ==================== DOVIZ KURU ====================
 
   /**
-   * Doviz kurunu sorgular.
+   * Belirli bir doviz kurunu sorgular.
    */
-  async getExchangeRate(currency: string, date: string): Promise<ExchangeRate> {
-    const result = await this.get<ExchangeRate>(
-      `/currency/rate?currency=${currency}&date=${date}`
-    );
-    return result ?? {};
+  async getExchangeRate(currency: string, date?: string): Promise<ApiResponse<ExchangeRate>> {
+    const params = new URLSearchParams({ currency });
+    if (date) params.append('date', date);
+    return this.get(`/currency/rate?${params.toString()}`);
+  }
+
+  /**
+   * Tum doviz kurlarini getirir.
+   */
+  async getAllExchangeRates(date?: string): Promise<ApiResponse<ExchangeRate[]>> {
+    const params = date ? `?date=${date}` : '';
+    return this.get(`/currency/rates${params}`);
   }
 
   // ==================== PRIVATE METHODS ====================
 
-  private async get<T>(endpoint: string): Promise<T | undefined> {
-    const url = endpoint.includes('?')
-      ? `${endpoint}&EtsToken=${this.etsToken}`
-      : `${endpoint}?EtsToken=${this.etsToken}`;
-
-    const response = await this.client.get<ResponseModel<T>>(url);
-
-    if (!response.data.Success) {
-      throw new Error(`Request failed: ${response.data.Message}`);
-    }
-
-    return response.data.Data;
+  private async get<T>(endpoint: string): Promise<ApiResponse<T>> {
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const url = `${endpoint}${separator}EtsToken=${this.etsToken}`;
+    const response = await this.client.get(url);
+    return response.data;
   }
 
-  private async post<T>(endpoint: string, data?: object): Promise<T | undefined> {
+  private async post<T>(endpoint: string, data: object = {}): Promise<ApiResponse<T>> {
     const requestData = { ...data, EtsToken: this.etsToken };
-
-    const response = await this.client.post<ResponseModel<T>>(endpoint, requestData);
-
-    if (!response.data.Success) {
-      throw new Error(`Request failed: ${response.data.Message}`);
-    }
-
-    return response.data.Data;
+    const response = await this.client.post(endpoint, requestData);
+    return response.data;
   }
 }
+
+// ==================== FACTORY ====================
+
+export function createEtsClient(config?: EtsClientConfig): EtsClient {
+  return new EtsClient(config);
+}
+
+export default EtsClient;
