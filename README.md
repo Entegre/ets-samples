@@ -58,7 +58,6 @@ curl -X POST https://ets-test.bulutix.com/invoice \
 | `UYK` | Uyumsoft Kurumsal | Büyük ölçekli işletmeler |
 | `IZI` | İzibiz | - |
 | `DGN` | Doğan E-Dönüşüm | - |
-| `MYS` | Mysoft | - |
 
 ## API Endpointleri
 
