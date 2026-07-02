@@ -27,7 +27,7 @@ await client.authenticate({
   Username: 'kullanici',
   Password: 'sifre',
   SoftwareId: 'MY-APP',
-  Integrator: 'UYM', // UYM, UYK, IZI, DGN, MYS
+  Integrator: 'UYM', // UYM, UYK, IZI, DGN, TRC
 });
 
 // E-Fatura mükellefi sorgula

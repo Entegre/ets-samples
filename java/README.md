@@ -27,7 +27,7 @@ client.authenticate(new EtsClient.EntegreId(
     "kullanici",     // Username
     "sifre",         // Password
     "MY-APP",        // SoftwareId
-    "UYM"            // Integrator: UYM, UYK, IZI, DGN, MYS
+    "UYM"            // Integrator: UYM, UYK, IZI, DGN, TRC
 ));
 
 // E-Fatura mükellefi sorgula

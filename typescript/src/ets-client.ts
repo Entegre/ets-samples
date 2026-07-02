@@ -7,7 +7,7 @@ import axios, { AxiosInstance } from 'axios';
 
 // ==================== TYPES ====================
 
-export type Integrator = 'UYM' | 'UYK' | 'IZI' | 'DGN';
+export type Integrator = 'UYM' | 'UYK' | 'IZI' | 'DGN' | 'TRC';
 
 export interface EtsClientConfig {
   baseUrl?: string;

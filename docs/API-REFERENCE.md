@@ -32,6 +32,7 @@ Content-Type: application/json
 | UYK | Uyumsoft Kurumsal |
 | IZI | İzibiz |
 | DGN | Doğan E-Dönüşüm |
+| TRC | Turkcell e-Şirket |
 
 **Yanıt:**
 ```json
